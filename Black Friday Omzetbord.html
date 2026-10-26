@@ -1,0 +1,249 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Black Friday Omzetbord</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one column scoreboard — status strip, KPI row, two charts, leaderboard. Orange = 2026, slate = 2025, faint = 2024. */
+:root{
+  --bg:#f7f6f4; --surface:#ffffff; --ink:#1c1b22; --muted:#6c6873; --line:#e4e1dc;
+  --accent:#e8601c; --accent-soft:#fde6d8; --y25:#5b6170; --y24:#c2bfba;
+  --good:#18794e; --bad:#c2410c; --gold:#f5c542; --silver:#cfd3da; --bronze:#e6a77a;
+  --display:"Archivo",system-ui,sans-serif; --body:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#16151a; --surface:#1f1e25; --ink:#f1efec; --muted:#a19ca8; --line:#2f2d36;
+  --accent:#ff7a33; --accent-soft:#3a2418; --y25:#a7adbb; --y24:#4b4954;
+  --good:#4ade80; --bad:#fb923c; --gold:#d9ab2a; --silver:#8b919c; --bronze:#b97a4e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#16151a; --surface:#1f1e25; --ink:#f1efec; --muted:#a19ca8; --line:#2f2d36;
+  --accent:#ff7a33; --accent-soft:#3a2418; --y25:#a7adbb; --y24:#4b4954;
+  --good:#4ade80; --bad:#fb923c; --gold:#d9ab2a; --silver:#8b919c; --bronze:#b97a4e; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+.wrap{max-width:1080px;margin:0 auto;padding-block:28px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:22px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+h1{font-family:var(--display);font-stretch:78%;font-weight:900;font-size:clamp(2.1rem,6vw,3.4rem);line-height:.95;margin:0;letter-spacing:-.01em;text-transform:uppercase;text-wrap:balance}
+h1 span{color:var(--accent)}
+.sub{color:var(--muted);margin:6px 0 0;max-width:60ch}
+h2{font-family:var(--display);font-stretch:85%;font-weight:800;font-size:1.15rem;margin:0;text-transform:uppercase;letter-spacing:.02em}
+.upload{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{font:600 14px var(--body);border:0;border-radius:6px;padding:10px 16px;background:var(--accent);color:#fff;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn:focus-visible,.drop:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.drop{border:1.5px dashed var(--line);border-radius:10px;padding:16px 18px;background:var(--surface);display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop p{margin:0;color:var(--muted);font-size:14px;min-width:0;flex:1 1 320px}
+.drop b{color:var(--ink)}
+.status{font-size:13px;color:var(--muted)}
+.status.err{color:var(--bad)}
+.pill{display:inline-block;font:600 11px var(--body);text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;gap:2px;align-content:start}
+.kpi .lbl{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.kpi .val{font-family:var(--display);font-stretch:80%;font-weight:800;font-size:clamp(1.25rem,4.6vw,1.7rem);white-space:nowrap;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi .note{font-size:12.5px;color:var(--muted)}
+.up{color:var(--good)} .down{color:var(--bad)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;display:grid;gap:12px;min-width:0}
+.panel-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.chartbox{position:relative;height:300px}
+.grid2{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:14px}
+th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td.num,th.num{text-align:right;font-family:var(--mono);font-size:13px}
+.rank{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;font-weight:600;font-size:12px;background:var(--bg)}
+tr.p1 .rank{background:var(--gold);color:#1c1b22} tr.p2 .rank{background:var(--silver);color:#1c1b22} tr.p3 .rank{background:var(--bronze);color:#1c1b22}
+tr.p1 td,tr.p2 td,tr.p3 td{font-weight:600}
+.empty{color:var(--muted);font-size:14px;padding:8px 0}
+.help{font-size:13.5px;color:var(--muted)}
+.help ol{margin:6px 0 0;padding-left:20px;display:grid;gap:4px}
+@media (max-width:820px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2{grid-template-columns:1fr}.chartbox{height:240px}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Black Friday <span>2026</span></h1>
+      <p class="sub">Dagomzet van 5 t/m 30 november, vergeleken met dezelfde dagen in 2025. Dag 23 is Black Friday.</p>
+    </div>
+    <span class="pill" id="mode">Nog geen 2026-bestand</span>
+  </header>
+
+  <label class="drop" id="drop" for="file">
+    <p>Sleep hier het spreadsheet naartoe of <b>kies een bestand</b>. In Google Sheets: Bestand → Downloaden → Microsoft Excel (.xlsx). CSV van het tabblad "Dagomzet 2026" werkt ook.</p>
+    <span class="upload"><span class="btn">Bestand kiezen</span><button type="button" class="btn ghost" id="reset" hidden>Wissen</button></span>
+    <input type="file" id="file" accept=".xlsx,.xls,.csv" hidden>
+  </label>
+  <div class="status" id="status" role="status">Zonder bestand zie je 2025 tegenover 2024.</div>
+
+  <section class="kpis" id="kpis"></section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Dagomzet</h2>
+      <div class="legend" id="leg1"></div></div>
+    <div class="chartbox"><canvas id="c1" aria-label="Lijngrafiek dagomzet"></canvas></div>
+  </section>
+
+  <div class="grid2">
+    <section class="panel">
+      <div class="panel-head"><h2>Cumulatief</h2><div class="legend" id="leg2"></div></div>
+      <div class="chartbox"><canvas id="c2" aria-label="Lijngrafiek cumulatieve omzet"></canvas></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Klassement</h2><span class="status" id="target"></span></div>
+      <div class="table-scroll" id="board"></div>
+    </section>
+  </div>
+
+  <section class="panel help">
+    <h2>Zo werkt het</h2>
+    <ol>
+      <li>Vul in Google Sheets de verwachtingen en elke dag de omzet in.</li>
+      <li>Download het bestand als .xlsx en sleep het hierboven naartoe.</li>
+      <li>Het klassement vergelijkt elke verwachting met de prognose (tijdens de actie) of de echte eindomzet (na dag 26).</li>
+    </ol>
+    <p style="margin:8px 0 0">Prognose = omzet tot nu toe ÷ omzet 2025 over dezelfde dagen × eindtotaal 2025. Zo telt de Black Friday-piek mee. Het bestand blijft in je eigen browser en wordt nergens heen gestuurd.</p>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const D25=[127807.31,84383.49,55590.06,47032.82,67708.98,54933.01,57771.85,44833.26,42580.65,38834.17,37954.73,53980.33,34718.98,46856.40,53781.09,61969.73,32926.13,61866.55,67084.25,56838.94,67260.16,64275.02,162992.65,36375.85,78382.08,56993.98];
+const D24=[113001.19,80407.53,42553.23,58788.01,51922.45,38742.22,55165.19,44495.62,38159.25,40984.70,46280.88,54643.23,50882.83,51865.95,55515.51,53107.46,47151.47,57601.83,75448.13,53218.52,81864.29,77506.09,147142.42,36083.42,78414.09,62842.79];
+const EXP25=[["Jeffrey",1100000],["Paulien",1210198.70],["Stéphanie",1425000],["Dennis",1468620],["Cristian",1600354.36],["Willeke",1623475.89],["Peter",1645843.34],["Ilse",1648000],["Rutger",1655000],["Tomas",1657058],["Kevin",1685089.24],["Estelle W",1698777],["Remco",1700000],["Martijn",1724151],["Lucas",1726071.93],["Jorieke",1759542.28],["Thijmen",1775320],["Jasper",1782527.12],["Noëlle",1789101.12],["Stijn",1795000],["Max",1822000],["Britt",1833546.10],["Luuk",1834000],["Julian",1838000],["Andrea",1845243.54],["Ramon",1846863.70],["Valerie",1867778.46],["Thijs",1876543.21],["Luna",1879766.25],["Sem",1915156],["Amber",1946826],["Estelle I",1987788.50],["Rhodé",2040049.02],["Jorg",2095000],["Michel",2100500],["Quinten",2136345],["Emily",2200000]];
+const TOTAL25=D25.reduce((a,b)=>a+b,0);
+const dayLabel=i=>{const d=new Date(2026,10,5+i);return d.toLocaleDateString("nl-NL",{day:"numeric",month:"short"}).replace(".","")};
+const eur=(v,dec=0)=>v==null||isNaN(v)?"–":"€ "+v.toLocaleString("nl-NL",{minimumFractionDigits:dec,maximumFractionDigits:dec});
+const pct=v=>v==null||!isFinite(v)?"–":(v>=0?"+":"−")+Math.abs(v*100).toLocaleString("nl-NL",{maximumFractionDigits:1})+"%";
+const cum=a=>{let s=0;return a.map(v=>v==null?null:(s+=v))};
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+let state={d26:null,exp:null,file:null};
+try{const s=JSON.parse(localStorage.getItem("bf26")||"null");if(s&&s.d26)state=s}catch(e){}
+
+function num(v){
+  if(v==null||v==="")return null;
+  if(typeof v==="number")return v;
+  let s=String(v).replace(/[€\s ]/g,"");
+  if(!s)return null;
+  if(s.includes(",")&&s.includes("."))s=s.lastIndexOf(",")>s.lastIndexOf(".")?s.replace(/\./g,"").replace(",","."):s.replace(/,/g,"");
+  else if(s.includes(","))s=s.replace(",",".");
+  else if(/^\-?\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,"");
+  const n=parseFloat(s);return isNaN(n)?null:n;
+}
+function findHeader(rows,re){for(let r=0;r<Math.min(rows.length,15);r++){const c=(rows[r]||[]).findIndex(x=>re.test(String(x??"").trim()));if(c>=0)return[r,c]}return null}
+function parseDaily(rows){
+  const h=findHeader(rows,/^omzet\s*2026$/i);if(!h)return null;
+  const [hr,col]=h;const out=Array(26).fill(null);let i=0;
+  for(let r=hr+1;r<rows.length&&i<26;r++){
+    const lab=String(rows[r]?.[0]??"");if(/totaal/i.test(lab))break;
+    const m=lab.match(/dag\s*(\d+)/i);const idx=m?+m[1]-1:i;
+    if(idx>=0&&idx<26)out[idx]=num(rows[r][col]);i++;
+  }
+  return out;
+}
+function parseExp(rows){
+  const h=findHeader(rows,/^verwachting$/i);if(!h)return null;
+  const [hr,col]=h;const nameCol=(rows[hr]||[]).findIndex(x=>/^naam$/i.test(String(x??"").trim()));
+  const out=[];for(let r=hr+1;r<rows.length;r++){const n=String(rows[r]?.[nameCol<0?col-1:nameCol]??"").trim();const v=num(rows[r]?.[col]);if(n&&v)out.push([n,v])}
+  return out;
+}
+function handle(file){
+  const st=document.getElementById("status");st.className="status";st.textContent="Bestand lezen…";
+  const rd=new FileReader();
+  rd.onload=e=>{
+    try{
+      const wb=XLSX.read(new Uint8Array(e.target.result),{type:"array",raw:false});
+      let d26=null,exp=null;
+      for(const n of wb.SheetNames){
+        const rows=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:null});
+        if(!d26){const d=parseDaily(rows);if(d)d26=d}
+        if(!exp){const x=parseExp(rows);if(x&&x.length)exp=x}
+      }
+      if(!d26){st.className="status err";st.textContent="Geen kolom 'Omzet 2026' gevonden. Gebruik het Black Friday 2026-spreadsheet, of een CSV van het tabblad 'Dagomzet 2026'.";return}
+      state={d26,exp,file:file.name};
+      try{localStorage.setItem("bf26",JSON.stringify(state))}catch(err){}
+      render();
+    }catch(err){st.className="status err";st.textContent="Dit bestand kon niet worden gelezen. Download het opnieuw als .xlsx of .csv en probeer het nog eens."}
+  };
+  rd.readAsArrayBuffer(file);
+}
+
+let c1,c2;
+Chart.defaults.font.family="IBM Plex Sans, system-ui, sans-serif";
+function render(){
+  const has=!!state.d26, cur=has?state.d26:D25, ref=has?D25:D24;
+  const curY=has?"2026":"2025", refY=has?"2025":"2024";
+  const filled=cur.filter(v=>v!=null).length;
+  const sumCur=cur.reduce((a,v)=>a+(v||0),0);
+  const sumRefSame=ref.reduce((a,v,i)=>a+(cur[i]!=null?v:0),0);
+  const totalRef=ref.reduce((a,b)=>a+b,0);
+  const prog=sumRefSame?sumCur/sumRefSame*totalRef:null;
+  const diff=sumRefSame?sumCur/sumRefSame-1:null;
+  let best=-1;cur.forEach((v,i)=>{if(v!=null&&(best<0||v>cur[best]))best=i});
+
+  document.getElementById("mode").textContent=has?("2026 · "+state.file):"Voorbeeld: 2025 vs 2024";
+  document.getElementById("reset").hidden=!has;
+  const st=document.getElementById("status");st.className="status";
+  st.textContent=has?`${filled} van de 26 dagen ingevuld${state.exp?` · ${state.exp.length} verwachtingen`:""}.`:"Zonder bestand zie je 2025 tegenover 2024. Upload het 2026-spreadsheet om de nieuwe actie te volgen.";
+
+  const k=[
+    ["Omzet "+curY,eur(sumCur),filled<26?`na ${filled} van 26 dagen`:"eindtotaal"],
+    ["T.o.v. "+refY,`<span class="${diff>=0?"up":"down"}">${pct(diff)}</span>`,`zelfde dagen ${refY}: ${eur(sumRefSame)}`],
+    [filled<26?"Prognose eindtotaal":"Eindtotaal",eur(filled<26?prog:sumCur),`${refY} eindigde op ${eur(totalRef)}`],
+    ["Beste dag",best<0?"–":eur(cur[best]),best<0?"nog geen omzet":`dag ${best+1} · ${dayLabel(best)}${best===22?" (Black Friday)":""}`]
+  ];
+  if(!has)k[3][2]=best<0?"":`dag ${best+1} · Black Friday`;
+  document.getElementById("kpis").innerHTML=k.map(([l,v,n])=>`<div class="kpi"><span class="lbl">${l}</span><span class="val">${v}</span><span class="note">${n}</span></div>`).join("");
+
+  const A=css("--accent"),R=css("--y25"),R4=css("--y24"),M=css("--muted"),L=css("--line");
+  const refColor=has?R:R4;
+  const leg=(a)=>a.map(([c,t,dash])=>`<span><i style="background:${dash?"repeating-linear-gradient(90deg,"+c+" 0 4px,transparent 4px 7px)":c}"></i>${t}</span>`).join("");
+  document.getElementById("leg1").innerHTML=leg([[A,curY],[refColor,refY]]);
+  const labels=D25.map((_,i)=>`${i+1}`);
+  const base={responsive:true,maintainAspectRatio:false,animation:{duration:matchMedia("(prefers-reduced-motion: reduce)").matches?0:400},
+    interaction:{mode:"index",intersect:false},
+    plugins:{legend:{display:false},tooltip:{callbacks:{title:it=>`Dag ${it[0].dataIndex+1} · ${dayLabel(it[0].dataIndex)}${it[0].dataIndex===22?" · Black Friday":""}`,label:c=>`${c.dataset.label}: ${eur(c.parsed.y)}`}}},
+    scales:{x:{grid:{display:false},ticks:{color:M,font:{family:"IBM Plex Mono",size:11},maxRotation:0,autoSkip:true}},
+      y:{grid:{color:L},border:{display:false},ticks:{color:M,font:{family:"IBM Plex Mono",size:11},callback:v=>"€ "+(v/1000).toLocaleString("nl-NL")+"k"}}}};
+  const bf={id:"bf",beforeDatasetsDraw(ch){const x=ch.scales.x.getPixelForValue(22),{top,bottom}=ch.chartArea,g=ch.ctx;g.save();g.fillStyle=css("--accent-soft");g.fillRect(x-10,top,20,bottom-top);g.fillStyle=M;g.font="600 10px IBM Plex Sans";g.textAlign="center";g.fillText("BLACK FRIDAY",x,top+10);g.restore()}};
+  const ds=(lab,data,color,w,dash)=>({label:lab,data,borderColor:color,backgroundColor:color,borderWidth:w,pointRadius:0,pointHoverRadius:4,tension:.25,spanGaps:false,borderDash:dash||[]});
+  c1&&c1.destroy();
+  c1=new Chart(document.getElementById("c1"),{type:"line",data:{labels,datasets:[ds(curY,cur,A,3),ds(refY,ref,refColor,2)]},options:base,plugins:[bf]});
+
+  const cc=cum(cur), cr=cum(ref);
+  const proj=Array(26).fill(null);
+  if(has&&filled>0&&filled<26){const last=cur.map((v,i)=>v!=null?i:-1).filter(i=>i>=0).pop();proj[last]=cc[last];for(let i=last+1;i<26;i++)proj[i]=proj[i-1]+ref[i]*(1+diff)}
+  const sets=[ds(curY,cc,A,3),ds(refY,cr,refColor,2)];
+  const lg=[[A,curY],[refColor,refY]];
+  if(proj.some(v=>v!=null)){sets.push(ds("Prognose",proj,A,2,[5,4]));lg.push([A,"Prognose",true])}
+  document.getElementById("leg2").innerHTML=leg(lg);
+  c2&&c2.destroy();
+  c2=new Chart(document.getElementById("c2"),{type:"line",data:{labels,datasets:sets},options:{...base,scales:{...base.scales,y:{...base.scales.y,ticks:{...base.scales.y.ticks,callback:v=>"€ "+(v/1e6).toLocaleString("nl-NL",{maximumFractionDigits:1})+" mln"}}}},plugins:[bf]});
+
+  const exp=has?state.exp:EXP25, target=has?(filled===26?sumCur:prog):TOTAL25;
+  document.getElementById("target").textContent=target?`vergeleken met ${eur(target)}${has&&filled<26?" (prognose)":""}`:"";
+  const b=document.getElementById("board");
+  if(!exp||!exp.length||!target){b.innerHTML=`<p class="empty">${has?"Nog geen verwachtingen of omzet in het bestand.":""}</p>`;return}
+  const rows=exp.map(([n,v])=>({n,v,d:v-target})).sort((a,b)=>Math.abs(a.d)-Math.abs(b.d));
+  b.innerHTML=`<table><thead><tr><th></th><th>Naam</th><th class="num">Verwachting</th><th class="num">Verschil</th></tr></thead><tbody>${rows.map((r,i)=>`<tr class="${i<3?"p"+(i+1):""}"><td><span class="rank">${i+1}</span></td><td>${r.n.replace(/</g,"&lt;")}</td><td class="num">${eur(r.v)}</td><td class="num ${r.d>=0?"up":"down"}">${r.d>=0?"+":"−"}${eur(Math.abs(r.d)).slice(2)}</td></tr>`).join("")}</tbody></table>`;
+}
+
+const inp=document.getElementById("file"),drop=document.getElementById("drop");
+inp.addEventListener("change",()=>{if(inp.files[0])handle(inp.files[0]);inp.value=""});
+["dragenter","dragover"].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add("over")}));
+["dragleave","drop"].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove("over")}));
+drop.addEventListener("drop",e=>{const f=e.dataTransfer.files[0];if(f)handle(f)});
+document.getElementById("reset").addEventListener("click",e=>{e.preventDefault();state={d26:null,exp:null,file:null};try{localStorage.removeItem("bf26")}catch(err){}render()});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",render);
+new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+document.fonts?.ready.then(render);
+render();
+</script>
+
+</body></html>
